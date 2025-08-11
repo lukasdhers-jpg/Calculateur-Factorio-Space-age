@@ -1,0 +1,11 @@
+{
+  "name": "factorio-space-age-calculator",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "convert": "node scripts/convert_dump.js script-output/data-raw-dump.json public/data/recipes.json"
+  }
+}
