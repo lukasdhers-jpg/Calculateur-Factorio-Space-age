@@ -10,3 +10,4 @@ Contenu de l'archive :
 - BUILD_INSTRUCTIONS.md
 
 Utilise scripts/fetch_recipes.sh puis node scripts/convert_dump.js pour générer public/data/recipes.json
+test
