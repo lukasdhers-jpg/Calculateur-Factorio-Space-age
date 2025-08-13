@@ -1,0 +1,19 @@
+name: Déployer sur GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Branche principale, change en "principal" si c’est le nom de ta branche
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Télécharger le code
+        uses: actions/checkout@v3
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .  # Dossier à publier (ici la racine du dépôt)
