@@ -1,21 +1,68 @@
-name: Deploy to GitHub Pages
+name: Pages – Build & Deploy
 
 on:
   push:
-    branches:
-      - principal
+    branches: [ main, principal ]   # déclenche sur "main" ET "principal"
+  workflow_dispatch:                 # déclenchement manuel possible
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Étapes Node ÉVENTUELLES (s’exécutent seulement si un package.json existe)
+      - name: Setup Node.js
+        if: hashFiles('**/package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        if: hashFiles('**/package.json') != ''
+        run: npm ci || npm install
+
+      - name: Build (si un script build existe)
+        if: hashFiles('**/package.json') != ''
+        run: |
+          if npm run -s build >/dev/null 2>&1; then
+            npm run build
+          else
+            echo "Pas de script build détecté — on publiera les fichiers statiques."
+          fi
+
+      # Détecte automatiquement quoi publier : dist → build → public → racine
+      - name: Détecter le dossier à publier
+        id: detect
+        run: |
+          set -e
+          for p in dist build public .; do
+            if [ -d "$p" ]; then
+              echo "PUBLISH_DIR=$p" >> $GITHUB_ENV
+              echo "dir=$p" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+          echo "Dossier publié: ${{ env.PUBLISH_DIR }}"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.PUBLISH_DIR }}
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: gh-pages
+        id: deployment
+        uses: actions/deploy-pages@v4
